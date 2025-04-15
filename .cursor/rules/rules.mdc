@@ -1,0 +1,70 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+### 1. Next.js Rule
+- **Guideline**: Organize the application using Next.js's file-based routing, with **separate files** for each page, component, and API route. Avoid large files by breaking down code into smaller, focused modules. Use server-side rendering only when necessary, preferring client-side rendering for better performance where possible.
+- **Why**: Ensures a modular structure that’s easy to navigate and maintain, aligning with Next.js best practices.
+
+---
+
+### 2. SuperBase Rule
+- **Guideline**: Design a normalized database schema and use SuperBase's client library for database interactions. Write efficient queries in **separate files or modules**, and consider using stored procedures for complex operations like appointment scheduling or patient lookups.
+- **Why**: Keeps database logic modular and prevents bloated files, improving performance and maintainability.
+
+---
+
+### 3. OpenAI API via AI SDK Rule
+- **Guideline**: Integrate the AI SDK for natural language processing, defining clear intents (e.g., "book appointment") and entities (e.g., "date", "dentist") in **separate configuration files**. Use AI responses to drive conversation flow and trigger actions.
+- **Why**: Separates AI configuration from application logic, enhancing modularity and ease of updates.
+
+---
+
+### 4. Function and Tool Calling Rule
+- **Guideline**: Define modular functions for specific actions (e.g., `bookAppointment`, `getPatientInfo`) in **separate files**, ensuring they are easily callable by the AI with clear input/output formats. Trigger these based on AI decisions, with robust parameter passing and error handling.
+- **Why**: Promotes reusability and prevents a monolithic structure by isolating action logic.
+
+---
+
+### 5. Generative UI Rule
+- **Guideline**: Create dynamic UI components using React, with **each component in its own file**, designed to integrate seamlessly into the chatbot interface (e.g., appointment cards, chat bubbles). Use CSS modules or styled components for styling, keeping styles separate from logic.
+- **Why**: Ensures an engaging, modular UI that’s easy to adapt and scale.
+
+---
+
+### 6. Overall Project Structure and Modularity Rule
+- **Guideline**: Structure the project with **separate directories** for pages, components, database interactions, AI integrations, and UI components. Each functionality must be in its own file or module, avoiding large, monolithic files.
+- **Why**: Enforces a clean, modular architecture that prevents code sprawl and simplifies collaboration.
+
+---
+
+### 7. Testing Rule
+- **Guideline**: Write unit tests for functions (e.g., booking logic) and components, and integration tests for API routes and SuperBase queries. Use tools like Jest and React Testing Library, keeping **test files separate** from implementation files.
+- **Why**: Maintains code quality and modularity, ensuring each piece is independently verifiable.
+
+---
+
+### 8. Performance Optimization Rule
+- **Guideline**: Optimize performance with techniques like code splitting, lazy loading (e.g., for UI components), and caching (e.g., SuperBase query results). Apply optimizations modularly to avoid bloating individual files.
+- **Why**: Keeps the app fast and scalable without sacrificing the modular structure.
+
+---
+
+### 9. User Experience and Conversation Design Rule
+- **Guideline**: Design the chatbot’s conversation flow to be intuitive, using clear, concise language and helpful prompts (e.g., "What time works for you?"). Keep conversation logic modular for easy adjustments.
+- **Why**: Enhances usability while maintaining flexibility in the codebase.
+
+---
+
+### 10. Documentation Rule
+- **Guideline**: Maintain up-to-date documentation, including code comments, API specs, and user guides. Use tools like JSDoc or Markdown, storing **documentation in separate files** to avoid cluttering code.
+- **Why**: Ensures clarity and maintainability without impacting the modularity of the source code.
+
+---
+
+## How These Rules Meet Your Needs
+- **Tech Stack Coverage**: Each component of your stack—Next.js, SuperBase, OpenAI API, Function and Tool Calling, and Generative UI—has a dedicated rule, plus additional rules for broader concerns (structure, testing, etc.).
+- **Modularity Emphasis**: Every rule mandates **multiple files** (e.g., separate components, queries, functions) to keep the codebase organized and scalable.
+- **No Monoliths**: Explicit instructions to "avoid large files" and "break down code" prevent a single, unwieldy file from forming.
+- **Project Context**: Rules are practical for a chatbot managing appointments, patients, and dentists, with examples like booking functions and UI components.
