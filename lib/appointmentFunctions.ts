@@ -43,7 +43,7 @@ export async function check_availability(
   // Generate all possible slots from 9:00 to 17:00 in 30-minute intervals
   const allSlots = [];
   for (let hour = 9; hour <= 17; hour++) {
-    for (let minute of [0, 30]) {
+    for (const minute of [0, 30]) {
       if (hour === 17 && minute === 30) continue; // Skip 17:30 as clinic closes at 17:00
       const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
       allSlots.push(timeString);
