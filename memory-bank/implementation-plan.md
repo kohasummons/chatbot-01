@@ -134,8 +134,9 @@ This document provides a detailed, step-by-step implementation plan for building
 
 ### Step 6: Integrate AI with Function Calling
 **Instructions:**
-- Install AI SDK: `npm install ai`.
+- Install AI SDK: `npm install ai`. DON't use OPenai sdk directly. Only use AI SDK.
 - In `/lib/appointmentFunctions.js`, define schemas for `check_availability`, `book_appointment`, and `reschedule_appointment` with parameter descriptions.
+- get context from the web: https://sdk.vercel.ai/docs/getting-started/nextjs-app-router
 - Create an API route at `pages/api/chat.js` that:
   - Accepts POST requests with `messages` (array of conversation history).
   - Uses AI SDK to send `messages` to the latest OpenAI model, including the function schemas.
