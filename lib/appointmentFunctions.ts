@@ -70,6 +70,54 @@ export async function check_availability(
   return allSlots.filter(slot => !bookedSlots.includes(slot));
 }
 
+// Function to check if a patient email already has any active (booked) appointments
+export async function check_existing_appointments(patient_email: string) {
+  if (!patient_email) {
+    return { hasAppointment: false, appointments: [] };
+  }
+
+  try {
+    // Get all patients with this email (could be multiple)
+    const { data: patients, error: patientError } = await supabase
+      .from('patients')
+      .select('id')
+      .eq('email', patient_email);
+      
+    if (patientError) {
+      console.error('Error checking for patient:', patientError);
+      throw new Error(`Failed to check for patient: ${patientError.message}`);
+    }
+    
+    // If no patients found with this email, they have no appointments
+    if (!patients || patients.length === 0) {
+      return { hasAppointment: false, appointments: [] };
+    }
+    
+    // Get all patient IDs
+    const patientIds = patients.map(patient => patient.id);
+    
+    // Check for any active appointments for these patients
+    const { data: appointments, error: appointmentError } = await supabase
+      .from('appointments')
+      .select('id, date, time, dentist_id')
+      .in('patient_id', patientIds)
+      .eq('status', 'booked');
+      
+    if (appointmentError) {
+      console.error('Error checking for existing appointments:', appointmentError);
+      throw new Error(`Failed to check for existing appointments: ${appointmentError.message}`);
+    }
+    
+    return { 
+      hasAppointment: appointments && appointments.length > 0, 
+      appointments: appointments || [] 
+    };
+  } catch (error) {
+    console.error('Unexpected error in check_existing_appointments:', error);
+    throw error;
+  }
+}
+
 // This is a placeholder for the book_appointment function to be implemented in Step 4
 export async function book_appointment(
   patient_name: string,
@@ -79,14 +127,28 @@ export async function book_appointment(
   patient_email: string = ''
 ) {
   try {
-    // Step 1: Check if the slot is available
+    // Step 1: If email is provided, check if patient already has existing appointments
+    if (patient_email) {
+      const { hasAppointment, appointments } = await check_existing_appointments(patient_email);
+      
+      if (hasAppointment) {
+        // Format appointments for display
+        const formattedAppointments = appointments.map(app => 
+          `${app.date} at ${app.time}`
+        ).join(', ');
+        
+        return `You already have active appointment(s) scheduled: ${formattedAppointments}. Please reschedule or cancel existing appointments before booking a new one.`;
+      }
+    }
+    
+    // Step 2: Check if the slot is available
     const availableSlots = await check_availability(date, dentist_id);
     
     if (!availableSlots.includes(time)) {
       return "Slot is already booked.";
     }
     
-    // Step 2: Check if the patient exists
+    // Step 3: Check if the patient exists
     let patientQuery = supabase
       .from('patients')
       .select('id')
@@ -106,7 +168,7 @@ export async function book_appointment(
     
     let patient_id;
     
-    // Step 3: If patient doesn't exist, create a new one
+    // Step 4: If patient doesn't exist, create a new one
     if (!existingPatient) {
       // First get the maximum patient ID to avoid primary key conflicts
       const { data: maxIdData, error: maxIdError } = await supabase
@@ -144,7 +206,7 @@ export async function book_appointment(
       patient_id = existingPatient.id;
     }
     
-    // Step 4: Insert the new appointment
+    // Step 5: Insert the new appointment
     const { data: appointment, error: appointmentError } = await supabase
       .from('appointments')
       .insert({
@@ -169,94 +231,152 @@ export async function book_appointment(
   }
 }
 
-// This is a placeholder for the reschedule_appointment function to be implemented in Step 5
+// Function to reschedule an appointment using patient email
 export async function reschedule_appointment(
   patient_name: string,
-  original_date: string,
-  original_time: string,
   new_date: string,
   new_time: string,
   dentist_id: string = '1',
-  patient_email: string = ''
+  patient_email: string = '',
+  appointment_id?: number,
+  original_date?: string,
+  original_time?: string
 ) {
   try {
-    // Step 1: Find the patient's ID by name and email if provided
-    let patientQuery = supabase
-      .from('patients')
-      .select('id')
-      .eq('name', patient_name);
+    if (!patient_email && !appointment_id && (!original_date || !original_time)) {
+      return "Email is required to reschedule an appointment.";
+    }
     
-    // Add email check if provided
+    // If we have a specific appointment ID, use that
+    if (appointment_id) {
+      // Check if the appointment exists
+      const { data: appointment, error: appointmentError } = await supabase
+        .from('appointments')
+        .select('id, date, time, patient_id')
+        .eq('id', appointment_id)
+        .eq('status', 'booked')
+        .single();
+        
+      if (appointmentError || !appointment) {
+        return "Appointment not found with the provided ID.";
+      }
+      
+      // Check if the new slot is available
+      const availableSlots = await check_availability(new_date, dentist_id);
+      if (!availableSlots.includes(new_time)) {
+        return "New slot is not available.";
+      }
+      
+      // Update the appointment
+      const { data: updatedAppointment, error: updateError } = await supabase
+        .from('appointments')
+        .update({
+          date: new_date,
+          time: new_time
+        })
+        .eq('id', appointment_id)
+        .select('id, date, time')
+        .single();
+        
+      if (updateError) {
+        console.error('Error rescheduling appointment:', updateError);
+        throw new Error(`Failed to reschedule appointment: ${updateError.message}`);
+      }
+      
+      return `Appointment successfully rescheduled to ${new_date} at ${new_time}.`;
+    }
+    
+    // Otherwise, try to find the patient by email
     if (patient_email) {
-      patientQuery = patientQuery.eq('email', patient_email);
-    }
-    
-    const { data: patient, error: patientError } = await patientQuery.maybeSingle();
+      // Get all patients with this email
+      const { data: patients, error: patientError } = await supabase
+        .from('patients')
+        .select('id, name')
+        .eq('email', patient_email);
+        
+      if (patientError) {
+        console.error('Error finding patient:', patientError);
+        throw new Error(`Failed to find patient: ${patientError.message}`);
+      }
       
-    if (patientError) {
-      console.error('Error finding patient:', patientError);
-      throw new Error(`Failed to find patient: ${patientError.message}`);
-    }
-    
-    if (!patient) {
-      return patient_email 
-        ? "Patient not found with the provided name and email." 
-        : "Patient not found with the provided name.";
-    }
-    
-    // Step 2: Find the original appointment
-    const { data: appointments, error: appointmentError } = await supabase
-      .from('appointments')
-      .select('id')
-      .eq('patient_id', patient.id)
-      .eq('date', original_date)
-      .eq('time', original_time)
-      .eq('dentist_id', parseInt(dentist_id))
-      .eq('status', 'booked');
+      if (!patients || patients.length === 0) {
+        return "No patient found with the provided email.";
+      }
       
-    if (appointmentError) {
-      console.error('Error finding appointment:', appointmentError);
-      throw new Error(`Failed to find appointment: ${appointmentError.message}`);
-    }
-    
-    if (!appointments || appointments.length === 0) {
-      return "Appointment not found.";
-    }
-    
-    if (appointments.length > 1) {
-      return "Appointment not found or ambiguous.";
-    }
-    
-    const appointmentId = appointments[0].id;
-    
-    // Step 3: Check if the new slot is available (if it's different from the original)
-    if (original_date === new_date && original_time === new_time) {
-      return "New slot is the same as the original slot.";
-    }
-    
-    const availableSlots = await check_availability(new_date, dentist_id);
-    
-    if (!availableSlots.includes(new_time)) {
-      return "New slot is not available.";
-    }
-    
-    // Step 4: Update the appointment
-    const { data: updatedAppointment, error: updateError } = await supabase
-      .from('appointments')
-      .update({
-        date: new_date,
-        time: new_time
-      })
-      .eq('id', appointmentId)
-      .select('id, date, time')
-      .single();
+      // Get all patient IDs
+      const patientIds = patients.map(p => p.id);
       
-    if (updateError) {
-      console.error('Error rescheduling appointment:', updateError);
-      throw new Error(`Failed to reschedule appointment: ${updateError.message}`);
+      // Find all appointments for these patients
+      let appointmentsQuery = supabase
+        .from('appointments')
+        .select('id, date, time, dentist_id')
+        .in('patient_id', patientIds)
+        .eq('status', 'booked');
+      
+      // If original date and time are provided, use them to filter
+      if (original_date && original_time) {
+        appointmentsQuery = appointmentsQuery
+          .eq('date', original_date)
+          .eq('time', original_time);
+      }
+        
+      const { data: appointments, error: appointmentError } = await appointmentsQuery;
+        
+      if (appointmentError) {
+        console.error('Error finding appointments:', appointmentError);
+        throw new Error(`Failed to find appointments: ${appointmentError.message}`);
+      }
+      
+      if (!appointments || appointments.length === 0) {
+        return original_date && original_time 
+          ? `No appointment found for ${original_date} at ${original_time}.`
+          : "No active appointments found for this email.";
+      }
+      
+      // If there's exactly one appointment, or we have original date/time to identify it
+      if (appointments.length === 1 || (original_date && original_time)) {
+        const appointmentToReschedule = appointments[0];
+        
+        // Skip if the new slot is the same as the original
+        if (appointmentToReschedule.date === new_date && appointmentToReschedule.time === new_time) {
+          return "New slot is the same as the original slot.";
+        }
+        
+        // Check if the new slot is available
+        const availableSlots = await check_availability(new_date, dentist_id);
+        if (!availableSlots.includes(new_time)) {
+          return "New slot is not available.";
+        }
+        
+        // Update the appointment
+        const { data: updatedAppointment, error: updateError } = await supabase
+          .from('appointments')
+          .update({
+            date: new_date,
+            time: new_time
+          })
+          .eq('id', appointmentToReschedule.id)
+          .select('id, date, time')
+          .single();
+          
+        if (updateError) {
+          console.error('Error rescheduling appointment:', updateError);
+          throw new Error(`Failed to reschedule appointment: ${updateError.message}`);
+        }
+        
+        return `Appointment successfully rescheduled from ${appointmentToReschedule.date} at ${appointmentToReschedule.time} to ${new_date} at ${new_time}.`;
+      } else {
+        // Multiple appointments found, return them so the user can choose
+        const formattedAppointments = appointments.map(app => 
+          `ID: ${app.id}, Date: ${app.date}, Time: ${app.time}`
+        ).join('\n');
+        
+        return `Multiple appointments found. Please specify which one to reschedule:\n${formattedAppointments}`;
+      }
     }
     
-    return "Appointment rescheduled successfully.";
+    // If we reach here, we didn't have enough information
+    return "Unable to identify which appointment to reschedule. Please provide either an appointment ID or patient email.";
   } catch (error) {
     console.error('Unexpected error in reschedule_appointment:', error);
     throw error;

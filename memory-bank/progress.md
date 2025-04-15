@@ -135,3 +135,38 @@ Date: Current Date
 ### Next Steps:
 
 (Step 6: Integrate AI with Function Calling)
+
+## Step 6: Integrate AI with Function Calling (Completed)
+
+Date: Current Date
+
+### Achievements:
+
+1. **AI SDK Integration**:
+   - Installed AI SDK packages: `ai`, `@ai-sdk/react`, and `@ai-sdk/openai`
+   - Created an API route handler at `app/api/chat/route.ts` for handling chat requests
+   - Implemented function calling using the AI SDK's `tool` function
+
+2. **Function Calling**:
+   - Defined Zod schemas for all three appointment functions:
+     - `check_availability`: For checking available appointment slots
+     - `book_appointment`: For booking new appointments
+     - `reschedule_appointment`: For rescheduling existing appointments
+   - Connected these functions to the OpenAI model through the AI SDK
+   - Enabled multi-step tool calls with proper error handling
+
+3. **Chat Interface**:
+   - Created a responsive chat UI with a floating chat button
+   - Implemented a modal chat interface with message history
+   - Added support for displaying different message types
+   - Included loading states and animations for better UX
+   - Used the useChat hook from AI SDK for managing chat state
+
+4. **Testing**:
+   - Verified function calling works correctly with test scenarios
+   - Tested the chat interface with different appointment-related queries
+   - Confirmed multi-step function calls work properly with `maxSteps: 5`
+
+### Next Steps:
+
+(Step 7: Develop Frontend Chat Interface)
