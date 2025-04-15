@@ -59,3 +59,33 @@ Date: Current Date
 ### Next Steps:
 
 (Step 4)
+
+## Step 4: Implement Backend Function - Book Appointment (Completed)
+
+Date: Current Date
+
+### Achievements:
+
+1. **Book Appointment Function**:
+   - Implemented the `book_appointment` function in `lib/appointmentFunctions.ts`
+   - The function takes parameters: `patient_name`, `date`, `time`, and optional `dentist_id`
+   - It performs the following actions:
+     - Checks if the requested slot is available using the `check_availability` function
+     - Verifies if the patient already exists in the database
+     - Creates a new patient record if the patient does not exist
+     - Books the appointment by inserting a new record in the Appointments table
+     - Returns appropriate success or failure messages
+
+2. **Test Infrastructure**:
+   - Created an API route `/api/book-appointment/route.ts` to test the booking function
+   - The API accepts URL parameters: `patient_name`, `date`, `time`, and `dentist_id`
+   - Default values are provided for testing: "Jane Doe", "2023-11-01", "11:00"
+
+3. **Error Handling**:
+   - Added robust error handling for all database operations
+   - Each step of the booking process has specific error messages
+   - The API returns appropriate HTTP status codes for success and failure cases
+
+### Next Steps:
+
+(Step 5: Implement Backend Function - Reschedule Appointment)

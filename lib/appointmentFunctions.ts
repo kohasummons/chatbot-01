@@ -77,8 +77,89 @@ export async function book_appointment(
   time: string,
   dentist_id: string = '1'
 ) {
-  // This will be implemented in Step 4
-  return 'This function will be implemented in Step 4';
+  try {
+    // Step 1: Check if the slot is available
+    const availableSlots = await check_availability(date, dentist_id);
+    
+    if (!availableSlots.includes(time)) {
+      return "Slot is already booked.";
+    }
+    
+    // Step 2: Check if the patient exists
+    const { data: existingPatient, error: patientError } = await supabase
+      .from('patients')
+      .select('id')
+      .eq('name', patient_name)
+      .maybeSingle();
+      
+    if (patientError) {
+      console.error('Error checking for existing patient:', patientError);
+      throw new Error(`Failed to check for existing patient: ${patientError.message}`);
+    }
+    
+    let patient_id;
+    
+    // Step 3: If patient doesn't exist, create a new one
+    if (!existingPatient) {
+      // First get the maximum patient ID to avoid primary key conflicts
+      const { data: maxIdData, error: maxIdError } = await supabase
+        .from('patients')
+        .select('id')
+        .order('id', { ascending: false })
+        .limit(1)
+        .single();
+        
+      if (maxIdError && !maxIdError.message.includes('No rows found')) {
+        console.error('Error getting max patient ID:', maxIdError);
+        throw new Error(`Failed to get max patient ID: ${maxIdError.message}`);
+      }
+      
+      const nextId = maxIdData ? maxIdData.id + 1 : 1;
+      
+      const { data: newPatient, error: createPatientError } = await supabase
+        .from('patients')
+        .insert({ 
+          id: nextId,
+          name: patient_name, 
+          email: '', 
+          phone: '' 
+        })
+        .select('id')
+        .single();
+        
+      if (createPatientError) {
+        console.error('Error creating new patient:', createPatientError);
+        throw new Error(`Failed to create new patient: ${createPatientError.message}`);
+      }
+      
+      patient_id = newPatient.id;
+    } else {
+      patient_id = existingPatient.id;
+    }
+    
+    // Step 4: Insert the new appointment
+    const { data: appointment, error: appointmentError } = await supabase
+      .from('appointments')
+      .insert({
+        patient_id,
+        dentist_id: parseInt(dentist_id),
+        date,
+        time,
+        status: 'booked'
+      })
+      .select('id, date, time')
+      .single();
+      
+    if (appointmentError) {
+      console.error('Error booking appointment:', appointmentError);
+      throw new Error(`Failed to book appointment: ${appointmentError.message}`);
+    }
+    
+    return "Appointment booked successfully.";
+  } catch (error) {
+    console.error('Unexpected error in book_appointment:', error);
+    throw error;
+  }
 }
 
 // This is a placeholder for the reschedule_appointment function to be implemented in Step 5
