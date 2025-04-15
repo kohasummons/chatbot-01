@@ -89,3 +89,49 @@ Date: Current Date
 ### Next Steps:
 
 (Step 5: Implement Backend Function - Reschedule Appointment)
+
+## Step 5: Implement Backend Function - Reschedule Appointment (Completed)
+
+Date: Current Date
+
+### Achievements:
+
+1. **Reschedule Appointment Function**:
+   - Implemented the `reschedule_appointment` function in `lib/appointmentFunctions.ts`
+   - The function takes parameters: `patient_name`, `original_date`, `original_time`, `new_date`, `new_time`, optional `dentist_id`, and optional `patient_email`
+   - It performs the following actions:
+     - Finds the patient's ID using the provided name and email (if provided)
+     - Queries the Appointments table to find a matching appointment based on patient_id, date, time, and dentist_id
+     - Checks if the new slot is available using the `check_availability` function
+     - Updates the appointment record with the new date and time if available
+     - Returns appropriate success or failure messages
+
+2. **Enhanced Patient Identification**:
+   - Updated both `book_appointment` and `reschedule_appointment` to use email as an additional identifier
+   - Modified API endpoints to accept and pass email parameters
+   - Improved error messages to specify whether lookup failed by name or name+email
+   - Preserved backward compatibility by making email parameter optional
+
+3. **Test Infrastructure**:
+   - Created an API route `/api/reschedule-appointment/route.ts` to test the rescheduling function
+   - The API accepts URL parameters: `patient_name`, `patient_email`, `original_date`, `original_time`, `new_date`, `new_time`, and `dentist_id`
+   - Default values are provided for testing: "Jane Doe", "2023-11-01", "11:00" to "2023-11-01", "12:00"
+
+4. **Error Handling**:
+   - Added robust error handling for all database operations
+   - Each step of the rescheduling process has specific error messages
+   - The API returns appropriate HTTP status codes for success and failure cases
+
+5. **Testing**:
+   - Verified the `reschedule_appointment` function works correctly by:
+     - Successfully rescheduling an existing appointment from "11:00" to "13:00" using both name and email
+     - Confirming the API returns appropriate success messages
+   - Tested error scenarios including:
+     - Patient not found with provided name and email
+     - Appointment not found
+     - New slot not available
+     - Ambiguous appointment matches
+
+### Next Steps:
+
+(Step 6: Integrate AI with Function Calling)

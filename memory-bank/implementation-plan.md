@@ -156,6 +156,7 @@ This document provides a detailed, step-by-step implementation plan for building
 ### Step 7: Develop Frontend Chat Interface
 **Instructions:**
 - Replace `pages/index.js` with a React component that:
+  - Has a chat bot button that opens a chat popup. tailwind css v4. 
   - Maintains conversation history in state (array of `{ role, content }` objects).
   - Displays messages in a scrollable list with animations using Framer Motion.
   - Includes a text input and send button.
