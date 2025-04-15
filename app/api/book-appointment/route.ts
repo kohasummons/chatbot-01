@@ -8,9 +8,10 @@ export async function GET(request: Request) {
   const date = url.searchParams.get('date') || '2023-11-01';
   const time = url.searchParams.get('time') || '11:00';
   const dentist_id = url.searchParams.get('dentist_id') || '1';
+  const reason = url.searchParams.get('reason') || 'Checkup';
   
   try {
-    const result = await book_appointment(patient_name, date, time, dentist_id, patient_email);
+    const result = await book_appointment(patient_name, date, time, dentist_id, patient_email, reason);
     return NextResponse.json({ success: true, message: result });
   } catch (error) {
     console.error('Error booking appointment:', error);

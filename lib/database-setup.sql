@@ -20,7 +20,8 @@ CREATE TABLE appointments (
   dentist_id INTEGER REFERENCES dentists(id) NOT NULL,
   date DATE NOT NULL,
   time TIME NOT NULL,
-  status TEXT NOT NULL CHECK (status IN ('booked', 'cancelled'))
+  status TEXT NOT NULL CHECK (status IN ('booked', 'cancelled')),
+  reason TEXT CHECK (reason IN ('Checkup', 'Emergency', 'Filling'))
 );
 
 -- Insert the default dentist (Dr. Smith)

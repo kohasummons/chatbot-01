@@ -124,7 +124,8 @@ export async function book_appointment(
   date: string,
   time: string,
   dentist_id: string = '1',
-  patient_email: string = ''
+  patient_email: string = '',
+  reason: string = 'Checkup'
 ) {
   try {
     // Step 1: If email is provided, check if patient already has existing appointments
@@ -176,7 +177,7 @@ export async function book_appointment(
         .select('id')
         .order('id', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
         
       if (maxIdError && !maxIdError.message.includes('No rows found')) {
         console.error('Error getting max patient ID:', maxIdError);
@@ -214,7 +215,8 @@ export async function book_appointment(
         dentist_id: parseInt(dentist_id),
         date,
         time,
-        status: 'booked'
+        status: 'booked',
+        reason
       })
       .select('id, date, time')
       .single();
